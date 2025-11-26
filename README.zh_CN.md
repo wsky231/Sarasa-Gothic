@@ -45,7 +45,6 @@ Sarasa Gothic 提供了多种字形风格、字重的组合，以满足不同的
 - `SC`: 简体中文
 - `TC`: 台湾繁体中文
 - `HC`: 香港繁体中文
-- `CL`: 传统旧字形
 - `J`: 日文
 - `K`: 韩文
 
@@ -87,3 +86,24 @@ npm run build ttc
 ```
 
 请注意，打包 TTC 时将会占用 *非常高* 的内存，因为包含了大量的子家族字符集的组合。
+
+### 只构建指定输出
+
+可以通过环境变量筛选需要的包：
+
+- `BUILD_FAMILIES`（或 `FAMILIES`）：用逗号分隔的系列名，例如 `Ui`。
+- `BUILD_SUBFAMILIES`（或 `SUBFAMILIES`）：用逗号分隔的地区代码，例如 `SC`。
+- `BUILD_HINTED_ONLY`（或 `HINTED_ONLY`）：设为 `1`/`true` 表示只生成带 hint 的文件。
+
+仅生成带 hint 的更纱 UI 示例：
+
+```bash
+# 更纱 UI 的 SuperTTC（带 hint）
+BUILD_FAMILIES=Ui BUILD_HINTED_ONLY=1 npm run build -- super-ttc
+
+# 更纱 UI 的 TTC（带 hint）
+BUILD_FAMILIES=Ui BUILD_HINTED_ONLY=1 npm run build -- ttc
+
+# 更纱 UI SC 的 TTF（带 hint）
+BUILD_FAMILIES=Ui BUILD_SUBFAMILIES=SC BUILD_HINTED_ONLY=1 npm run build -- ttf
+```
