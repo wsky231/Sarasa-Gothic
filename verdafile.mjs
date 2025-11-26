@@ -38,33 +38,37 @@ build.setSelfTracking();
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Entrypoint
 const Start = phony("all", async t => {
-	const [config, version] = await t.need(Config, Version);
-	await t.need(Ttf, Ttc);
+        const [config, version] = await t.need(Config, Version);
+        await t.need(Ttf, Ttc);
 
-	let archiveTargets = [
-		TtcArchive(`7z`, `TTC`, version),
-		TtcArchive(`7z`, `TTC-Unhinted`, version),
-		TtcArchive(`zip`, `TTC`, version),
-		TtcArchive(`zip`, `TTC-Unhinted`, version),
-		SuperTtcArchive(`7z`, `TTC`, version),
-		SuperTtcArchive(`7z`, `TTC-Unhinted`, version),
-		SuperTtcArchive(`zip`, `TTC`, version),
-		SuperTtcArchive(`zip`, `TTC-Unhinted`, version),
-		AllFamilyTtfArchive(`7z`, `TTF`, version),
-		AllFamilyTtfArchive(`7z`, `TTF-Unhinted`, version)
-	];
+        const ttfInfixes = TtfInfixes(config);
+        const ttcInfixes = TtcInfixes(config);
 
-	// Standalone archives
-	for (const f of config.familyOrder) {
-		archiveTargets.push(SingleFamilyTtfArchive(`7z`, `TTF`, f, version));
-		archiveTargets.push(SingleFamilyTtfArchive(`7z`, `TTF-Unhinted`, f, version));
-		archiveTargets.push(SingleFamilyTtfArchive(`zip`, `TTF`, f, version));
-		archiveTargets.push(SingleFamilyTtfArchive(`zip`, `TTF-Unhinted`, f, version));
-		for (const sf of config.subfamilyOrder) {
-			archiveTargets.push(StandaloneTtfArchive(`7z`, `TTF`, f, sf, version));
-			archiveTargets.push(StandaloneTtfArchive(`7z`, `TTF-Unhinted`, f, sf, version));
-		}
-	}
+        let archiveTargets = [];
+
+        for (const format of [`7z`, `zip`]) {
+                for (const infix of ttcInfixes) {
+                        archiveTargets.push(TtcArchive(format, infix, version));
+                        archiveTargets.push(SuperTtcArchive(format, infix, version));
+                }
+        }
+
+        for (const infix of ttfInfixes) {
+                archiveTargets.push(AllFamilyTtfArchive(`7z`, infix, version));
+        }
+
+        // Standalone archives
+        for (const f of config.familyOrder) {
+                for (const infix of ttfInfixes) {
+                        archiveTargets.push(SingleFamilyTtfArchive(`7z`, infix, f, version));
+                        archiveTargets.push(SingleFamilyTtfArchive(`zip`, infix, f, version));
+                }
+                for (const sf of config.subfamilyOrder) {
+                        for (const infix of ttfInfixes) {
+                                archiveTargets.push(StandaloneTtfArchive(`7z`, infix, f, sf, version));
+                        }
+                }
+        }
 
 	const [packages] = await t.need(archiveTargets);
 
@@ -83,16 +87,20 @@ const Start = phony("all", async t => {
 });
 
 const SuperTtc = phony(`super-ttc`, async target => {
-	await target.need(SuperTtcFile`TTC`, SuperTtcFile`TTC-Unhinted`);
+        const [config] = await target.need(Config);
+        const infixes = TtcInfixes(config);
+
+        await target.need(infixes.map(i => SuperTtcFile(i)));
 });
 
 const Ttc = phony(`ttc`, async t => {
-	await t.need(Ttf);
-	await t.need(TtcFontFiles`TTC`, TtcFontFiles`TTC-Unhinted`);
+        const [config] = await t.need(Config, Ttf);
+        await t.need(TtcInfixes(config).map(i => TtcFontFiles(i)));
 });
 
 const Ttf = phony(`ttf`, async t => {
-	await t.need(TtfFontFiles`TTF`, TtfFontFiles`TTF-Unhinted`);
+        const [config] = await t.need(Config);
+        await t.need(TtfInfixes(config).map(i => TtfFontFiles(i)));
 });
 
 const CheckTtfAutoHintExists = oracle("oracle:check-ttfautohint-exists", async target => {
@@ -684,18 +692,39 @@ const Scripts = task("dep::scripts", async t => {
 });
 
 const Config = oracle("dep::config", async () => {
-	const configPath = path.resolve(PROJECT_ROOT, "config.json");
-	const privateConfigPath = path.resolve(PROJECT_ROOT, "config.private.json");
-	const config = await fs.readJSON(configPath);
-	if (fs.existsSync(privateConfigPath)) {
-		const privateConfig = await fs.readJSON(privateConfigPath);
-		config.buildOptions = Object.assign(
-			{},
-			config.buildOptions || {},
-			privateConfig.buildOptions || {}
-		);
-	}
-	return config;
+        const configPath = path.resolve(PROJECT_ROOT, "config.json");
+        const privateConfigPath = path.resolve(PROJECT_ROOT, "config.private.json");
+        const config = await fs.readJSON(configPath);
+        let buildOptions = config.buildOptions || {};
+
+        if (fs.existsSync(privateConfigPath)) {
+                const privateConfig = await fs.readJSON(privateConfigPath);
+                buildOptions = Object.assign({}, buildOptions, privateConfig.buildOptions || {});
+        }
+
+        const familyFilter = pickListOption(buildOptions.families, ["BUILD_FAMILIES", "FAMILIES"]);
+        const subfamilyFilter = pickListOption(buildOptions.subfamilies, [
+                "BUILD_SUBFAMILIES",
+                "SUBFAMILIES"
+        ]);
+        const styleFilter = pickListOption(buildOptions.styles, ["BUILD_STYLES", "STYLES"]);
+        const hintedOnly = pickBoolOption(buildOptions.hintedOnly, [
+                "BUILD_HINTED_ONLY",
+                "HINTED_ONLY"
+        ]);
+
+        config.familyOrder = applyListFilter(config.familyOrder, familyFilter, "families");
+        config.subfamilyOrder = applyListFilter(config.subfamilyOrder, subfamilyFilter, "subfamilies");
+        config.styleOrder = applyListFilter(config.styleOrder, styleFilter, "styles");
+
+        config.buildOptions = Object.assign({}, buildOptions, {
+                hintedOnly,
+                families: familyFilter,
+                subfamilies: subfamilyFilter,
+                styles: styleFilter
+        });
+
+        return config;
 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -716,17 +745,82 @@ async function MakeTtc(config, from, to) {
 	await run(TTC_BUNDLE, "--verbose", "-x", ["-o", to], from);
 }
 async function MakeSuperTtc(config, from, to) {
-	await run(TTC_BUNDLE, "--verbose", ["-o", to], from);
+        await run(TTC_BUNDLE, "--verbose", ["-o", to], from);
 }
 
 async function RunFontBuildTask(recipe, args) {
-	return await node(recipe, args);
+        return await node(recipe, args);
+}
+
+function TtfInfixes(config) {
+        return buildInfixes(config, "TTF");
+}
+
+function TtcInfixes(config) {
+        return buildInfixes(config, "TTC");
+}
+
+function buildInfixes(config, base) {
+        const infixes = [base];
+        if (!config.buildOptions.hintedOnly) infixes.push(`${base}-Unhinted`);
+        return infixes;
+}
+
+function pickListOption(fallback, envNames) {
+        const envValue = envNames.map(name => process.env[name]).find(v => v !== undefined);
+        const envList = parseList(envValue);
+        if (envList && envList.length > 0) return envList;
+
+        const fallbackList = parseList(fallback);
+        return fallbackList && fallbackList.length > 0 ? fallbackList : null;
+}
+
+function pickBoolOption(fallback, envNames) {
+        const envValue = envNames.map(name => process.env[name]).find(v => v !== undefined);
+        const envBool = parseBool(envValue);
+        if (envBool !== undefined) return envBool;
+
+        const fallbackBool = parseBool(fallback);
+        return fallbackBool !== undefined ? fallbackBool : false;
+}
+
+function applyListFilter(list, filter, label) {
+        if (!filter || filter.length === 0) return list;
+        const filtered = list.filter(f => filter.includes(f));
+
+        if (filtered.length === 0) {
+                fail(`No ${label} matched filter: ${filter.join(", ")}`);
+        }
+
+        return filtered;
+}
+
+function parseList(value) {
+        if (!value) return null;
+        if (Array.isArray(value)) return value.map(v => `${v}`);
+        if (typeof value === "string")
+                return value
+                        .split(/[,;]/)
+                        .map(s => s.trim())
+                        .filter(Boolean);
+        return null;
+}
+
+function parseBool(value) {
+        if (value === undefined || value === null) return undefined;
+        if (typeof value === "boolean") return value;
+        if (typeof value === "string") {
+                const normalized = value.trim().toLowerCase();
+                if (!normalized) return undefined;
+                return ["1", "true", "yes", "on"].includes(normalized);
+        }
+        return Boolean(value);
 }
 
 function deItalizedNameOf(config, set) {
-	return (set + "")
-		.split("-")
-		.map(w => (config.styles[w] ? config.styles[w].uprightStyleMap || w : w))
-		.join("-");
+        return (set + "")
+                .split("-")
+                .map(w => (config.styles[w] ? config.styles[w].uprightStyleMap || w : w))
+                .join("-");
 }
 export default build;
