@@ -194,12 +194,12 @@ function SevenZipCompress(format, fMT, dir, target, ...inputs) {
 const BreakShsTtc = task.make(
 	weight => `break-ttc::${weight}`,
 	async ($, weight) => {
-		const [config] = await $.need(Config, de(`${BUILD}/shs`));
-		const shsSourceMap = config.shsSourceMap;
-		const shsSuffix = shsSourceMap.styleMap[weight] || weight;
-		await run(OTC2OTF, `${SOURCES}/shs/${shsSourceMap.defaultRegion}-${shsSuffix}.ttc`);
-		for (const regionID in shsSourceMap.region) {
-			const shsPrefix = shsSourceMap.region[regionID];
+                const [config] = await $.need(Config, de(`${BUILD}/shs`));
+                const shsSourceMap = config.shsSourceMap;
+                const shsSuffix = (shsSourceMap.styleMap && shsSourceMap.styleMap[weight]) || weight;
+                await run(OTC2OTF, `${SOURCES}/shs/${shsSourceMap.defaultRegion}-${shsSuffix}.ttc`);
+                for (const regionID in shsSourceMap.region) {
+                        const shsPrefix = shsSourceMap.region[regionID];
 			const partName = `${shsPrefix}-${shsSuffix}.otf`;
 			if (await fs.pathExists(`${SOURCES}/shs/${partName}`)) {
 				await rm(`${BUILD}/shs/${partName}`);
@@ -212,39 +212,40 @@ const BreakShsTtc = task.make(
 const ShsTtf = file.make(
 	(region, weight) => `${BUILD}/shs/${region}-${weight}.ttf`,
 	async (t, out, region, weight) => {
-		const [config] = await t.need(Config, BreakShsTtc(weight));
-		const shsSourceMap = config.shsSourceMap;
-		const shsPrefix = shsSourceMap.region[region];
-		const shsSuffix = shsSourceMap.styleMap[weight] || weight;
-		const [, $1] = await t.need(de(out.dir), fu`${BUILD}/shs/${shsPrefix}-${shsSuffix}.otf`);
-		await run("otf2ttf", "-o", out.full, $1.full);
-	}
+                const [config] = await t.need(Config, BreakShsTtc(weight));
+                const shsSourceMap = config.shsSourceMap;
+                const shsPrefix = shsSourceMap.region[region];
+                const shsSuffix = (shsSourceMap.styleMap && shsSourceMap.styleMap[weight]) || weight;
+                const [, $1] = await t.need(de(out.dir), fu`${BUILD}/shs/${shsPrefix}-${shsSuffix}.otf`);
+                await run("otf2ttf", "-o", out.full, $1.full);
+        }
 );
 
 const ShsCassicalOverrideTtf = file.make(
 	weight => `${BUILD}/shs-classical-override/${weight}.ttf`,
-	async (t, out, weight) => {
-		const [config] = await t.need(Config);
-		const shsSourceMap = config.shsSourceMap;
-		const shsPrefix = shsSourceMap.classicalOverridePrefix;
-		const shsWeight = shsSourceMap.classicalOverrideSuffixMap[weight] || weight;
-		const [, $1] = await t.need(
-			de(out.dir),
-			fu`${SOURCES}/shs-classical-override/${shsPrefix}-${shsWeight}.otf`
-		);
+        async (t, out, weight) => {
+                const [config] = await t.need(Config);
+                const shsSourceMap = config.shsSourceMap;
+                const shsPrefix = shsSourceMap.classicalOverridePrefix;
+                const classicalOverrides = shsSourceMap.classicalOverrideSuffixMap || {};
+                const shsWeight = classicalOverrides[weight] || weight;
+                const [, $1] = await t.need(
+                        de(out.dir),
+                        fu`${SOURCES}/shs-classical-override/${shsPrefix}-${shsWeight}.otf`
+                );
 		await run("otf2ttf", "-o", out.full, $1.full);
 	}
 );
 
 const Kanji0 = file.make(
 	(region, style) => `${BUILD}/kanji0/${region}-${style}.ttf`,
-	async (t, out, region, style) => {
-		const [config] = await t.need(Config, Scripts);
-		const [$1] = await t.need(ShsTtf(region, style), de(out.dir));
-		let $2 = null;
-		if (region === config.shsSourceMap.classicalRegion) {
-			[$2] = await t.need(ShsCassicalOverrideTtf(style));
-		}
+        async (t, out, region, style) => {
+                const [config] = await t.need(Config, Scripts);
+                const [$1] = await t.need(ShsTtf(region, style), de(out.dir));
+                let $2 = null;
+                if (region === config.shsSourceMap.classicalRegion && config.shsSourceMap.classicalOverridePrefix) {
+                        [$2] = await t.need(ShsCassicalOverrideTtf(style));
+                }
 		await RunFontBuildTask("make/kanji/build.mjs", {
 			main: $1.full,
 			classicalOverride: $2 ? $2.full : null,
