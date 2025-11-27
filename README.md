@@ -32,6 +32,42 @@ instead, the files would be in `out/ttc` directory.
 
 Please note that you will need *a lot of* memory to create TTCs, due to the huge quantity of subfamily-orthography combinations.
 
+### Building only selected outputs
+
+If you only need a subset of the packages, you can filter by environment variables:
+
+- `BUILD_FAMILIES` (or `FAMILIES`): comma-separated family names, e.g. `Ui`.
+- `BUILD_SUBFAMILIES` (or `SUBFAMILIES`): comma-separated orthography codes, e.g. `SC`.
+- `BUILD_HINTED_ONLY` (or `HINTED_ONLY`): set to `1`/`true` to skip unhinted builds.
+
+Examples for hinted Sarasa UI builds only:
+
+```bash
+# Hinted Sarasa UI SuperTTCs
+BUILD_FAMILIES=Ui BUILD_HINTED_ONLY=1 npm run build -- super-ttc
+
+# Hinted Sarasa UI TTCs
+BUILD_FAMILIES=Ui BUILD_HINTED_ONLY=1 npm run build -- ttc
+
+# Hinted Sarasa UI SC TTFs
+BUILD_FAMILIES=Ui BUILD_SUBFAMILIES=SC BUILD_HINTED_ONLY=1 npm run build -- ttf
+```
+
+### Creating WOFF2 for Sarasa UI SC (web use)
+
+1. Build the hinted Sarasa UI SC TTFs:
+
+   ```bash
+   BUILD_FAMILIES=Ui BUILD_SUBFAMILIES=SC BUILD_HINTED_ONLY=1 npm run build -- ttf
+   ```
+
+2. Install the Google WOFF2 CLI so that `woff2_compress` is available (for example, `sudo apt-get install woff2`).
+3. Run the converter to generate compressed WOFF2 files in `out/WOFF2/SarasaUI-SC`:
+
+   ```bash
+   node tools/woff2-ui-sc.mjs
+   ```
+
 ## What are the names?
 
 - Style dimension
@@ -43,7 +79,6 @@ Please note that you will need *a lot of* memory to create TTCs, due to the huge
     - Em dashes (`——`) are half width —— **Term**
     - No ligature, Em dashes (`——`) are half width —— **Fixed**
 - Orthography dimension
-  - `CL`: Classical orthography
   - `SC`, `TC`, `J`, `K`, `HC`: Regional orthography, following [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) notations.
 
 ## Mirrors

@@ -104,18 +104,20 @@
 			}
 		}
 	},
-	"styleOrder": [
-		"ExtraLight",
-		"ExtraLightItalic",
-		"Light",
-		"LightItalic",
-		"Regular",
-		"Italic",
-		"SemiBold",
-		"SemiBoldItalic",
-		"Bold",
-		"BoldItalic"
-	],
+        "styleOrder": [
+                "ExtraLight",
+                "ExtraLightItalic",
+                "Light",
+                "LightItalic",
+                "Regular",
+                "Italic",
+                "Medium",
+                "MediumItalic",
+                "SemiBold",
+                "SemiBoldItalic",
+                "Bold",
+                "BoldItalic"
+        ],
 	"latinGroups": {
 		"Inter": {
 			"isCff": false,
@@ -160,16 +162,23 @@
 			"name": "Light Italic",
 			"uprightStyleMap": "Light"
 		},
-		"Regular": {
-			"name": "Regular"
-		},
-		"Italic": {
-			"name": "Italic",
-			"uprightStyleMap": "Regular"
-		},
-		"SemiBold": {
-			"name": "SemiBold"
-		},
+                "Regular": {
+                        "name": "Regular"
+                },
+                "Italic": {
+                        "name": "Italic",
+                        "uprightStyleMap": "Regular"
+                },
+                "Medium": {
+                        "name": "Medium"
+                },
+                "MediumItalic": {
+                        "name": "Medium Italic",
+                        "uprightStyleMap": "Medium"
+                },
+                "SemiBold": {
+                        "name": "SemiBold"
+                },
 		"SemiBoldItalic": {
 			"name": "SemiBold Italic",
 			"uprightStyleMap": "SemiBold"
@@ -182,7 +191,7 @@
 			"uprightStyleMap": "Bold"
 		}
 	},
-	"subfamilyOrder": ["CL", "SC", "TC", "HC", "J", "K"],
+        "subfamilyOrder": ["SC", "TC", "HC", "J", "K"],
 	"os2encodings": {
 		"J": {
 			"gbk": false,
@@ -202,61 +211,40 @@
 			"jis": false,
 			"korean": false
 		},
-		"HC": {
-			"gbk": false,
-			"big5": true,
-			"jis": false,
-			"korean": false
-		},
-		"CL": {
-			"gbk": false,
-			"big5": true,
-			"jis": false,
-			"korean": false
-		},
-		"K": {
-			"gbk": false,
-			"big5": false,
+                "HC": {
+                        "gbk": false,
+                        "big5": true,
+                        "jis": false,
+                        "korean": false
+                },
+                "K": {
+                        "gbk": false,
+                        "big5": false,
 			"jis": false,
 			"korean": true
 		}
 	},
 	"nameTupleSelector": {
-		"J": ["en_US", "ja_JP"],
-		"K": ["en_US", "ko_KR"],
-		"SC": ["en_US", "zh_CN"],
-		"TC": ["en_US", "zh_TW"],
-		"HC": ["en_US", "zh_HK"],
-		"CL": ["en_US", "zh_TW"]
-	},
+                "J": ["en_US", "ja_JP"],
+                "K": ["en_US", "ko_KR"],
+                "SC": ["en_US", "zh_CN"],
+                "TC": ["en_US", "zh_TW"],
+                "HC": ["en_US", "zh_HK"]
+        },
 	"copyright": "Copyright (c) 2015-2025, Renzhi Li (aka. Belleve Invis, belleve@typeof.net). Portions Copyright (c) 2016 The Inter Project Authors. Portions Copyright (c) 2014-2021 Adobe Systems Incorporated (http://www.adobe.com/). Portions Copyright (c) 2012 Google Inc.",
 	"shsSourceMap": {
 		"defaultRegion": "SourceHanSans",
 		"region": {
-			"J": "SourceHanSans",
-			"K": "SourceHanSansK",
-			"CL": "SourceHanSansK",
-			"SC": "SourceHanSansSC",
-			"TC": "SourceHanSansTC",
-			"HC": "SourceHanSansHC",
-			"J-HW": "SourceHanSansHW",
-			"K-HW": "SourceHanSansHWK",
-			"CL-HW": "SourceHanSansHWK",
-			"SC-HW": "SourceHanSansHWSC",
-			"TC-HW": "SourceHanSansHWTC",
-			"HC-HW": "SourceHanSansHWHC"
-		},
-		"styleMap": {
-			"SemiBold": "Medium"
-		},
-		"classicalRegion": "CL",
-		"classicalOverridePrefix": "ShangguSansTC",
-		"classicalOverrideSuffixMap": {
-			"ExtraLight": "ExtraLight-subset",
-			"Light": "Light-subset",
-			"Regular": "Regular-subset",
-			"SemiBold": "Medium-subset",
-			"Bold": "Bold-subset"
-		}
-	}
+                        "J": "SourceHanSans",
+                        "K": "SourceHanSansK",
+                        "SC": "SourceHanSansSC",
+                        "TC": "SourceHanSansTC",
+                        "HC": "SourceHanSansHC",
+                        "J-HW": "SourceHanSansHW",
+                        "K-HW": "SourceHanSansHWK",
+                        "SC-HW": "SourceHanSansHWSC",
+                        "TC-HW": "SourceHanSansHWTC",
+                        "HC-HW": "SourceHanSansHWHC"
+                }
+        }
 }
