@@ -53,6 +53,21 @@ BUILD_FAMILIES=Ui BUILD_HINTED_ONLY=1 npm run build -- ttc
 BUILD_FAMILIES=Ui BUILD_SUBFAMILIES=SC BUILD_HINTED_ONLY=1 npm run build -- ttf
 ```
 
+### Creating WOFF2 for Sarasa UI SC (web use)
+
+1. Build the hinted Sarasa UI SC TTFs:
+
+   ```bash
+   BUILD_FAMILIES=Ui BUILD_SUBFAMILIES=SC BUILD_HINTED_ONLY=1 npm run build -- ttf
+   ```
+
+2. Install the Google WOFF2 CLI so that `woff2_compress` is available (for example, `sudo apt-get install woff2`).
+3. Run the converter to generate compressed WOFF2 files in `out/WOFF2/SarasaUI-SC`:
+
+   ```bash
+   node tools/woff2-ui-sc.mjs
+   ```
+
 ## What are the names?
 
 - Style dimension

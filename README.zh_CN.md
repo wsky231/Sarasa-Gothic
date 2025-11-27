@@ -107,3 +107,18 @@ BUILD_FAMILIES=Ui BUILD_HINTED_ONLY=1 npm run build -- ttc
 # 更纱 UI SC 的 TTF（带 hint）
 BUILD_FAMILIES=Ui BUILD_SUBFAMILIES=SC BUILD_HINTED_ONLY=1 npm run build -- ttf
 ```
+
+### 为网页生成 Sarasa UI SC 的 WOFF2
+
+1. 先生成带 hint 的更纱 UI SC TTF：
+
+   ```bash
+   BUILD_FAMILIES=Ui BUILD_SUBFAMILIES=SC BUILD_HINTED_ONLY=1 npm run build -- ttf
+   ```
+
+2. 安装 Google 的 WOFF2 命令行工具（确保系统能调用 `woff2_compress`，例如 `sudo apt-get install woff2`）。
+3. 运行转换脚本，将压缩后的 WOFF2 输出到 `out/WOFF2/SarasaUI-SC`：
+
+   ```bash
+   node tools/woff2-ui-sc.mjs
+   ```
